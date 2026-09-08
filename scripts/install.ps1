@@ -17,8 +17,8 @@ $download = "https://github.com/$repo/releases/download/$Version"
 $staging = Join-Path ([System.IO.Path]::GetTempPath()) "ccp-install-$([guid]::NewGuid())"
 New-Item -ItemType Directory -Path $staging | Out-Null
 try {
-    Invoke-WebRequest "$download/$archive" -OutFile (Join-Path $staging $archive)
-    Invoke-WebRequest "$download/$checksum" -OutFile (Join-Path $staging $checksum)
+    Invoke-WebRequest "$download/$archive" -UseBasicParsing -OutFile (Join-Path $staging $archive)
+    Invoke-WebRequest "$download/$checksum" -UseBasicParsing -OutFile (Join-Path $staging $checksum)
     $expected = ((Get-Content -LiteralPath (Join-Path $staging $checksum) -Raw).Trim() -split '\s+')[0]
     $actual = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $staging $archive)).Hash
     if ($expected -notmatch '^[a-fA-F0-9]{64}$' -or $actual -ne $expected) {
@@ -33,8 +33,8 @@ try {
     New-Item -ItemType Directory -Force -Path $InstallDir | Out-Null
     Copy-Item -LiteralPath $binary -Destination (Join-Path $InstallDir 'claude-code-proxy.exe') -Force
     Write-Host "Installed $reported to $InstallDir (SHA-256 verified)."
-    Write-Host "Run: & '$InstallDir\claude-code-proxy.exe' serve"
-    Write-Host 'See FORK_SETUP.md for ChatGPT authentication and VS Code configuration.'
+    Write-Host 'Next: authenticate, then run configure-vscode.ps1. See FORK_SETUP.md.'
+    Write-Host 'Daily use: Iniciar proxy.lnk or start-proxy.ps1 starts the proxy in the background.'
 } finally {
     $tempRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath()).TrimEnd('\') + '\'
     $resolvedStaging = [System.IO.Path]::GetFullPath($staging)

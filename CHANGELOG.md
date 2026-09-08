@@ -13,6 +13,10 @@ description: Release notes for claude-code-proxy.
   and macOS on x64 and ARM64. Installers point to this fork.
 - Keeps upstream runtime behavior, Claude aliases, authentication, and opt-in
   Codex Images API unchanged. Adds Windows / VS Code setup documentation.
+- Updates the companion VS Code installer with Codex Proxy Tools 1.0.0: native
+  image tools replace the image MCP bridge, with no external Node runtime.
+- Adds hidden background startup, steering and compaction configuration, repeat
+  installation fixes for PowerShell 5.1, and documented native-chat validation.
 
 ## v0.1.35 (2026-08-19)
 

@@ -1,0 +1,49 @@
+{
+  "name": "codex-proxy-tools",
+  "displayName": "Codex Proxy Tools",
+  "description": "Native VS Code image tools for the local claude-code-proxy and your ChatGPT subscription. No MCP server.",
+  "version": "1.0.0",
+  "publisher": "RonaldProCo",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/RonaldProCo/claude-code-proxy", "directory": "vscode-extension" },
+  "engines": { "vscode": "^1.112.0" },
+  "categories": ["AI"],
+  "main": "./extension.cjs",
+  "activationEvents": ["onStartupFinished"],
+  "extensionKind": ["ui"],
+  "capabilities": { "untrustedWorkspaces": { "supported": false }, "virtualWorkspaces": { "supported": false } },
+  "scripts": { "test": "node --test test/*.test.cjs", "prepackage": "node -e \"require('node:fs').mkdirSync('dist',{recursive:true})\"", "package": "vsce package --no-dependencies --out dist/codex-proxy-tools.vsix" },
+  "devDependencies": { "@vscode/vsce": "3.7.1" },
+  "contributes": {
+    "configuration": {
+      "title": "Codex Proxy Tools",
+      "properties": {
+        "codexProxyTools.proxyUrl": { "type": "string", "default": "http://127.0.0.1:18765", "scope": "machine", "description": "Local HTTP URL of the running proxy. Images API must be enabled." },
+        "codexProxyTools.outputDirectory": { "type": "string", "default": "", "scope": "machine", "description": "Absolute local folder for generated images. Empty uses Pictures/Codex in your home folder." }
+      }
+    },
+    "languageModelTools": [
+      {
+        "name": "codexProxy_generateImage", "displayName": "Codex: Generate Image", "toolReferenceName": "codexGenerateImage",
+        "icon": "$(file-media)", "canBeReferencedInPrompt": true,
+        "userDescription": "Generate and save an image using your ChatGPT image quota through the local proxy.",
+        "modelDescription": "Generate a raster image with gpt-image-2 through the local claude-code-proxy. Use when the user requests a new image. Saves one new local file, returns its absolute path and image preview. Uses ChatGPT image quota and can take several minutes. Do not use for code or SVG. Does not require MCP or a terminal. Never retry automatically after cancellation or timeout. For an existing image use codexProxy_editImage.",
+        "inputSchema": { "type": "object", "additionalProperties": false, "required": ["prompt"], "properties": {
+          "prompt": { "type": "string", "minLength": 1, "description": "Detailed visual description of the requested image." },
+          "filename": { "type": "string", "description": "Optional new simple filename, without directories. Existing files are never overwritten." }
+        } }
+      },
+      {
+        "name": "codexProxy_editImage", "displayName": "Codex: Edit Image", "toolReferenceName": "codexEditImage",
+        "icon": "$(file-media)", "canBeReferencedInPrompt": true,
+        "userDescription": "Edit selected local images; save a new file and preserve the originals.",
+        "modelDescription": "Edit 1 to 5 local PNG, JPEG, WebP or GIF images explicitly selected by the user with gpt-image-2 via the local proxy. Supply absolute paths on the user's local computer, not remote workspace paths. Uploads the selected images to ChatGPT, uses image quota, preserves originals, saves one new local image and returns its path and preview. Maximum 20 MiB per input. Never retry automatically after cancellation or timeout.",
+        "inputSchema": { "type": "object", "additionalProperties": false, "required": ["prompt", "images"], "properties": {
+          "prompt": { "type": "string", "minLength": 1, "description": "Changes to make to the selected images." },
+          "filename": { "type": "string", "description": "Optional new simple filename without directories; never overwritten." },
+          "images": { "type": "array", "minItems": 1, "maxItems": 5, "items": { "type": "string" }, "description": "Absolute local paths to images the user selected for editing." }
+        } }
+      }
+    ]
+  }
+}

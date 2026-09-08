@@ -2,10 +2,11 @@ param(
     [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Programs\claude-code-proxy'),
     [string]$VSCodeUserDir = (Join-Path $env:APPDATA 'Code\User'),
     [string]$ProxyConfigDir = (Join-Path $env:USERPROFILE '.config\claude-code-proxy'),
+    [string]$VsixPath,
     [switch]$SkipImages
 )
 $ErrorActionPreference = 'Stop'
-$stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+$stamp = Get-Date -Format 'yyyyMMdd-HHmmss-fffffff'
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 function Save-Config($Path, $Value) {
     if (Test-Path -LiteralPath $Path) { Copy-Item -LiteralPath $Path -Destination "$Path.$stamp.bak" }
@@ -17,14 +18,22 @@ function Set-Property($Object, $Name, $Value) {
 }
 $modelsFile = Join-Path $VSCodeUserDir 'chatLanguageModels.json'
 $mcpFile = Join-Path $VSCodeUserDir 'mcp.json'
+$settingsFile = Join-Path $VSCodeUserDir 'settings.json'
 $configFile = Join-Path $ProxyConfigDir 'config.json'
 # Parse every existing file before any writes. JSONC needs manual merging.
-$models = @(if (Test-Path -LiteralPath $modelsFile) { Get-Content -LiteralPath $modelsFile -Raw | ConvertFrom-Json })
+$models = @()
+if (Test-Path -LiteralPath $modelsFile) {
+    $parsedModels = Get-Content -LiteralPath $modelsFile -Raw | ConvertFrom-Json
+    foreach ($entry in $parsedModels) { $models += $entry }
+}
 $config = if (Test-Path -LiteralPath $configFile) { Get-Content -LiteralPath $configFile -Raw | ConvertFrom-Json } else { [pscustomobject]@{} }
+$settings = if (Test-Path -LiteralPath $settingsFile) { Get-Content -LiteralPath $settingsFile -Raw | ConvertFrom-Json } else { [pscustomobject]@{} }
 $mcp = if (-not $SkipImages -and (Test-Path -LiteralPath $mcpFile)) { Get-Content -LiteralPath $mcpFile -Raw | ConvertFrom-Json } else { [pscustomobject]@{ servers = [pscustomobject]@{} } }
-$node = if (-not $SkipImages) { (Get-Command node -ErrorAction Stop).Source }
-$bridgeSource = Join-Path $PSScriptRoot 'codex-images-mcp.mjs'
-if (-not $SkipImages -and -not (Test-Path -LiteralPath $bridgeSource)) { throw 'Keep codex-images-mcp.mjs next to this script.' }
+if (-not $SkipImages) {
+    if (-not $VsixPath) { $VsixPath = Join-Path $PSScriptRoot 'codex-proxy-tools.vsix' }
+    if (-not (Test-Path -LiteralPath $VsixPath)) { throw 'Extract the current vscode-setup.zip, or supply -VsixPath with the native extension package.' }
+    $codeCommand = (Get-Command code -ErrorAction Stop).Source
+}
 $port = if ($config.port) { $config.port } else { 18765 }
 $url = "http://127.0.0.1:$port"
 $provider = @($models | Where-Object { $_.name -eq 'Codex via Proxy' -and $_.vendor -eq 'customendpoint' })
@@ -41,17 +50,36 @@ $astra = [pscustomobject]@{
 Set-Property $provider[0] 'apiType' 'messages'
 Set-Property $provider[0] 'models' (@($provider[0].models | Where-Object { $_.id -ne 'gpt-6-astra' }) + $astra)
 if (-not $config.codex) { Set-Property $config 'codex' ([pscustomobject]@{}) }
+Set-Property $settings 'chat.requestQueuing.defaultAction' 'steer'
+Set-Property $settings 'github.copilot.chat.summarizeAgentConversationHistory.enabled' $true
+# Preserve explicit utility model choices; set a default for BYOK sessions only.
+if (-not $settings.PSObject.Properties['chat.byokUtilityModelDefault']) { Set-Property $settings 'chat.byokUtilityModelDefault' 'mainAgent' }
 if (-not $SkipImages) {
     Set-Property $config.codex 'imagesApi' $true
-    if (-not $mcp.servers) { Set-Property $mcp 'servers' ([pscustomobject]@{}) }
-    $bridge = Join-Path $InstallDir 'codex-images-mcp.mjs'
-    [System.IO.Directory]::CreateDirectory($InstallDir) | Out-Null
-    if ([System.IO.Path]::GetFullPath($bridgeSource) -ne [System.IO.Path]::GetFullPath($bridge)) { Copy-Item -LiteralPath $bridgeSource -Destination $bridge -Force }
-    Set-Property $mcp.servers 'codex-images' ([pscustomobject]@{ type = 'stdio'; command = $node; args = @($bridge); env = [pscustomobject]@{ CCP_IMAGE_PROXY_URL = $url } })
-    Save-Config $mcpFile $mcp
+    & $codeCommand --install-extension $VsixPath --force
+    if ($LASTEXITCODE -ne 0) { throw 'VS Code could not install the native extension. Configuration was not changed.' }
+    Set-Property $settings 'codexProxyTools.proxyUrl' $url
+    # Migrate only the bridge created by older versions of this setup.
+    $oldBridge = $mcp.servers.'codex-images'
+    if ($oldBridge -and $oldBridge.type -eq 'stdio' -and @($oldBridge.args).Count -eq 1 -and [System.IO.Path]::GetFileName($oldBridge.args[0]) -eq 'codex-images-mcp.mjs') {
+        $mcp.servers.PSObject.Properties.Remove('codex-images')
+        Save-Config $mcpFile $mcp
+    }
 }
 Save-Config $modelsFile @($models)
 Save-Config $configFile $config
+Save-Config $settingsFile $settings
+[System.IO.Directory]::CreateDirectory($InstallDir) | Out-Null
+$starter = Join-Path $InstallDir 'start-proxy.ps1'
+$starterSource = Join-Path $PSScriptRoot 'start-proxy.ps1'
+if ([System.IO.Path]::GetFullPath($starterSource) -ne [System.IO.Path]::GetFullPath($starter)) { Copy-Item -LiteralPath $starterSource -Destination $starter -Force }
+$shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $InstallDir 'Iniciar proxy.lnk'))
+$shortcut.TargetPath = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+$shortcut.Arguments = '-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -File "' + $starter + '" -InstallDir "' + $InstallDir + '" -ProxyConfigDir "' + $ProxyConfigDir + '"'
+$shortcut.WorkingDirectory = $InstallDir
+$shortcut.WindowStyle = 7
+$shortcut.Save()
 Write-Host 'Configured GPT-6 Astra in VS Code. Existing settings were backed up beside each file.'
-Write-Host "Start the release binary with CCP_CONFIG_DIR=$ProxyConfigDir, then open a new VS Code chat and select GPT-6 Astra (Codex subscription)."
-if (-not $SkipImages) { Write-Host 'Start codex-images from MCP: List Servers. Images are saved to Pictures\Codex.' }
+Write-Host "Start with: $InstallDir\Iniciar proxy.lnk. The proxy stays in the background; no terminal needs to remain open."
+Write-Host 'Reload the VS Code window and select GPT-6 Astra (Codex subscription) in Agent chat. Follow-up messages use Steer.'
+if (-not $SkipImages) { Write-Host 'Enable Codex: Generate Image and Codex: Edit Image in the tool picker. No image MCP server is needed.' }

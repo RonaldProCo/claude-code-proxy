@@ -24,12 +24,22 @@ those of your ChatGPT account. To enable the existing image endpoint, set
 proxy-owned ChatGPT login and consumes its image quota.
 
 [Complete Windows and VS Code instructions](https://github.com/RonaldProCo/claude-code-proxy/blob/main/FORK_SETUP.md).
-The `vscode-setup.zip` attachment contains the installer, configuration helper,
-startup script, and optional image MCP bridge from the fork, with its source
-commit recorded in `SOURCE.json`. Node.js 22+ is required only for the image MCP
-bridge. The proxy executable itself needs no Rust or Node installation.
+The updated `vscode-setup.zip` attachment contains the installer, configuration
+helper, hidden background launcher, and **Codex Proxy Tools 1.0.0**, a native
+VS Code extension for image generation and editing. Its source commit is recorded
+in `SOURCE.json`. It replaces this fork's earlier MCP image bridge. End users do
+not need Rust, Node.js, an image MCP server, or an open terminal. Install once,
+then start the proxy with `Iniciar proxy.lnk`. The VSIX is also attached separately.
+
+The setup configures **Steer** for messages sent during work and enables automatic
+history summarization. [Tools, context, steering, and compaction guide](https://github.com/RonaldProCo/claude-code-proxy/blob/main/VSCODE_GUIDE.md).
+The VS Code package has its own build workflow and does not replace the Rust
+executables from the original release tag.
 
 Validated with the published Windows x64 executable: **1,027 passing Rust
-tests**, Astra responding inside VS Code's built-in chat, image generation with
-an inline chat preview, and a real image edit through the MCP bridge.
+tests**, Astra responding inside VS Code's built-in chat, native image generation
+and editing with previews, reading/editing files, steering while an image tool
+was running, and `/compact` followed by correct recall of the task's control data.
+Native client regression tests also cover cancellation, timeouts, invalid inputs,
+HTTP failures, redirects, and preserving existing images.
 [Validation report](https://github.com/RonaldProCo/claude-code-proxy/blob/main/VALIDATION.md).

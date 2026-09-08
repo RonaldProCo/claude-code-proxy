@@ -5,11 +5,13 @@
 > including GPT-6 Astra support. This is an independent fork release.
 > The proxy runtime and existing aliases are unchanged from that upstream commit.
 > [Download binaries](https://github.com/RonaldProCo/claude-code-proxy/releases/latest) ·
-> [Windows / VS Code setup](FORK_SETUP.md).
+> [Windows / VS Code setup](FORK_SETUP.md) · [VS Code usage guide](VSCODE_GUIDE.md).
 
-Tested with the published Windows binary in VS Code's built-in chat: Astra text
-and image generation with an inline preview. Image editing was also tested
-through the MCP bridge and local proxy. [Validation results](VALIDATION.md).
+Tested with the published Windows binary in VS Code's built-in chat: Astra,
+native image generation and editing, file tools, steering during a running
+request, and conversation compaction. Install the small **Codex Proxy Tools**
+VSIX once; then start the proxy in the background. No image MCP server or
+separate Node installation is needed. [Validation results](VALIDATION.md).
 
 Claude Code, powered by **OpenAI Codex**, **Kimi**, **Grok**, **OpenCode Go**,
 or **Cursor Agent**.

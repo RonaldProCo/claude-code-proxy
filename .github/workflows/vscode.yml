@@ -1,0 +1,65 @@
+name: VS Code package
+
+on:
+  push:
+    branches: [main]
+    paths: ['vscode-extension/**', 'scripts/**', 'FORK_SETUP.md', 'VSCODE_GUIDE.md', 'VALIDATION.md', '.github/workflows/vscode.yml']
+  pull_request:
+    paths: ['vscode-extension/**', 'scripts/**', 'FORK_SETUP.md', 'VSCODE_GUIDE.md', 'VALIDATION.md', '.github/workflows/vscode.yml']
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Attach the validated native VS Code package to v0.1.36-astra.1
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: vscode-extension/package-lock.json
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+        working-directory: vscode-extension
+      - run: npm test
+        working-directory: vscode-extension
+      - name: Windows PowerShell 5.1 configuration regression tests
+        shell: powershell
+        run: .\scripts\test-vscode-setup.ps1
+      - name: PowerShell 7 configuration regression tests
+        shell: pwsh
+        run: .\scripts\test-vscode-setup.ps1
+      - run: npm run package
+        working-directory: vscode-extension
+      - name: Assemble installer with exact source revision
+        shell: pwsh
+        env:
+          SOURCE_COMMIT: ${{ github.sha }}
+        run: .\scripts\package-vscode.ps1 -SourceCommit $env:SOURCE_COMMIT
+      - uses: actions/upload-artifact@v5
+        with:
+          name: vscode-native-setup
+          path: dist/vscode/*
+  publish:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish && github.repository == 'RonaldProCo/claude-code-proxy'
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v5
+        with:
+          name: vscode-native-setup
+          path: dist
+      - name: Attach native extension and installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release upload v0.1.36-astra.1 dist/* --clobber
