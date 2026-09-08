@@ -6,10 +6,14 @@ Incluye el soporte de Astra de `main` y se publica de forma independiente como
 
 ## Configurar otra PC desde cero
 
-Requisitos: Windows x64 o ARM64, VS Code con su chat integrado habilitado, una
+Requisitos: Windows 10/11 x64 o ARM64, VS Code con su chat integrado habilitado, una
 cuenta de ChatGPT con acceso a Astra y, para las herramientas de imágenes,
 [Node.js 22 LTS o posterior](https://nodejs.org/en/download). El binario del proxy
 funciona sin Node.js. No necesitas Rust, Cargo ni compilar el proyecto.
+El binario de Windows utiliza el runtime de Microsoft Visual C++; si la PC no
+lo tiene, instala el [Visual C++ Redistributable v14 oficial de Microsoft](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist)
+para tu arquitectura ([x64](https://aka.ms/vc14/vc_redist.x64.exe),
+[ARM64](https://aka.ms/vc14/vc_redist.arm64.exe)).
 
 1. Descarga `vscode-setup.zip` y extráelo. Sus scripts también están en `scripts/`
    en este repositorio. Abre PowerShell en la carpeta extraída.
@@ -201,6 +205,8 @@ Si el proveedor rechaza una solicitud, revisa el error que devuelve el proxy.
   en el navegador y reinicia el proxy para cargar la sesión renovada.
 - Conexión rechazada: inicia `start-proxy.ps1` y verifica el puerto de la URL
   configurada en VS Code. El proxy debe seguir ejecutándose.
+- `VCRUNTIME140.dll` no encontrado: instala el Visual C++ Redistributable de
+  Microsoft enlazado en los requisitos y vuelve a ejecutar el instalador.
 - HTTP 404 al generar imágenes: habilita `codex.imagesApi` o
   `CCP_CODEX_IMAGES_API=1` y reinicia el proxy.
 - La herramienta de imágenes no aparece: instala Node.js, reinicia VS Code y

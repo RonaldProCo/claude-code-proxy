@@ -7,6 +7,10 @@
 > [Download binaries](https://github.com/RonaldProCo/claude-code-proxy/releases/latest) ·
 > [Windows / VS Code setup](FORK_SETUP.md).
 
+Tested with the published Windows binary in VS Code's built-in chat: Astra text
+and image generation with an inline preview. Image editing was also tested
+through the MCP bridge and local proxy. [Validation results](VALIDATION.md).
+
 Claude Code, powered by **OpenAI Codex**, **Kimi**, **Grok**, **OpenCode Go**,
 or **Cursor Agent**.
 

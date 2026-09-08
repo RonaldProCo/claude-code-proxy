@@ -28,3 +28,8 @@ The `vscode-setup.zip` attachment contains the installer, configuration helper,
 startup script, and optional image MCP bridge from the fork, with its source
 commit recorded in `SOURCE.json`. Node.js 22+ is required only for the image MCP
 bridge. The proxy executable itself needs no Rust or Node installation.
+
+Validated with the published Windows x64 executable: **1,027 passing Rust
+tests**, Astra responding inside VS Code's built-in chat, image generation with
+an inline chat preview, and a real image edit through the MCP bridge.
+[Validation report](https://github.com/RonaldProCo/claude-code-proxy/blob/main/VALIDATION.md).
