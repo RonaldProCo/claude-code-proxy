@@ -3,6 +3,17 @@ title: Changelog
 description: Release notes for claude-code-proxy.
 ---
 
+## v0.1.36-astra.1 (2026-09-07, RonaldProCo fork)
+
+- Packages upstream `main` at `55bf0b5`, including `gpt-6-astra`,
+  `gpt-6-astra-fast`, Responses Lite routing, and model discovery (#129).
+- Includes upstream request-id headers (#105) and semantic function-call
+  continuation matching (#119) since v0.1.35.
+- Publishes independent binaries and SHA-256 checksums for Windows, Linux,
+  and macOS on x64 and ARM64. Installers point to this fork.
+- Keeps upstream runtime behavior, Claude aliases, authentication, and opt-in
+  Codex Images API unchanged. Adds Windows / VS Code setup documentation.
+
 ## v0.1.35 (2026-08-19)
 
 - Grok web search works reliably with Claude Code, preserves other tools, and

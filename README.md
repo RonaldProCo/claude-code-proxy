@@ -1,5 +1,12 @@
 # claude-code-proxy
 
+> **RonaldProCo fork — v0.1.36-astra.1.** Packages upstream `main` at
+> [`55bf0b5`](https://github.com/raine/claude-code-proxy/commit/55bf0b5818b461e1860964809726f99d2fd52c10),
+> including GPT-6 Astra support. This is an independent fork release.
+> The proxy runtime and existing aliases are unchanged from that upstream commit.
+> [Download binaries](https://github.com/RonaldProCo/claude-code-proxy/releases/latest) ·
+> [Windows / VS Code setup](FORK_SETUP.md).
+
 Claude Code, powered by **OpenAI Codex**, **Kimi**, **Grok**, **OpenCode Go**,
 or **Cursor Agent**.
 
@@ -27,20 +34,14 @@ throughput.
 
 ## Quick start with Codex
 
-Install on macOS or Linux:
+Install this fork on macOS or Linux:
 
 ```sh
-brew install raine/claude-code-proxy/claude-code-proxy
-```
-
-Or use the release installer:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/raine/claude-code-proxy/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/RonaldProCo/claude-code-proxy/main/scripts/install.sh | bash
 ```
 
 Windows and other prebuilt artifacts are available from
-[GitHub Releases](https://github.com/raine/claude-code-proxy/releases).
+[GitHub Releases](https://github.com/RonaldProCo/claude-code-proxy/releases).
 
 Sign in with a **ChatGPT Plus or Pro account**, not an OpenAI API account:
 
@@ -59,7 +60,7 @@ Start Claude Code in another:
 ```sh
 ANTHROPIC_BASE_URL=http://127.0.0.1:18765 \
 ANTHROPIC_AUTH_TOKEN=unused \
-ANTHROPIC_MODEL=gpt-5.6-sol[1m] \
+ANTHROPIC_MODEL=gpt-6-astra[1m] \
 ANTHROPIC_SMALL_FAST_MODEL=gpt-5.6-luna[1m] \
 CLAUDE_CODE_AUTO_COMPACT_WINDOW=272000 \
 CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1 \

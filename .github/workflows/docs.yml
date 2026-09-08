@@ -42,6 +42,7 @@ jobs:
           path: docs/dist
 
   deploy:
+    if: github.repository == 'raine/claude-code-proxy'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
