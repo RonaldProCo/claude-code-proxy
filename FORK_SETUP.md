@@ -46,7 +46,7 @@ funciona sin Node.js. No necesitas Rust, Cargo ni compilar el proyecto.
    ```
 
 6. En VS Code abre un chat nuevo, despliega el selector de modelos y selecciona
-   **GPT-6 Astra (Codex subscription)**, en **Codex via Proxy**. Si no aparece,
+   **Other Models > Codex via Proxy > GPT-6 Astra (Codex subscription)**. Si no aparece,
    ejecuta **Developer: Reload Window** desde la paleta de comandos.
 7. Ejecuta **MCP: List Servers**, selecciona **codex-images** e inícialo. Revisa
    y acepta la confianza de ese servidor cuando VS Code la solicite. En modo
@@ -193,3 +193,22 @@ cuenta de ChatGPT.
 
 El registro local del modelo no garantiza que una cuenta concreta tenga acceso.
 Si el proveedor rechaza una solicitud, revisa el error que devuelve el proxy.
+
+## Problemas frecuentes
+
+- `invalid_refresh_token` o “Could not validate your refresh token”: vuelve a
+  ejecutar `codex auth login` con el mismo `CCP_CONFIG_DIR`, completa el acceso
+  en el navegador y reinicia el proxy para cargar la sesión renovada.
+- Conexión rechazada: inicia `start-proxy.ps1` y verifica el puerto de la URL
+  configurada en VS Code. El proxy debe seguir ejecutándose.
+- HTTP 404 al generar imágenes: habilita `codex.imagesApi` o
+  `CCP_CODEX_IMAGES_API=1` y reinicia el proxy.
+- La herramienta de imágenes no aparece: instala Node.js, reinicia VS Code y
+  revisa **MCP: List Servers > codex-images**. Confirma la confianza del servidor
+  y habilita sus herramientas en modo Agent.
+- El proveedor rechaza Astra o la generación por cuota: revisa el acceso y la
+  cuota de la cuenta autenticada. La release no modifica las cuotas ni desbloquea
+  modelos que el proveedor no haya habilitado para tu cuenta.
+
+La guía de configuración de MCP de VS Code está en
+[la documentación oficial](https://code.visualstudio.com/docs/agent-customization/mcp-servers).

@@ -23,4 +23,8 @@ those of your ChatGPT account. To enable the existing image endpoint, set
 `CCP_CODEX_IMAGES_API=1` on the proxy process. Image generation uses the same
 proxy-owned ChatGPT login and consumes its image quota.
 
-[Windows and VS Code instructions](https://github.com/RonaldProCo/claude-code-proxy/blob/v0.1.36-astra.1/FORK_SETUP.md)
+[Complete Windows and VS Code instructions](https://github.com/RonaldProCo/claude-code-proxy/blob/main/FORK_SETUP.md).
+The `vscode-setup.zip` attachment contains the installer, configuration helper,
+startup script, and optional image MCP bridge from the fork, with its source
+commit recorded in `SOURCE.json`. Node.js 22+ is required only for the image MCP
+bridge. The proxy executable itself needs no Rust or Node installation.
