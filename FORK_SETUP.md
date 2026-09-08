@@ -1,8 +1,113 @@
-# Astra: Windows y Claude Code en VS Code
+# Astra: Windows y el chat integrado de VS Code
 
 Esta versión del fork conserva el código de ejecución de upstream `55bf0b5`.
 Incluye el soporte de Astra de `main` y se publica de forma independiente como
 `v0.1.36-astra.1`.
+
+## Configurar otra PC desde cero
+
+Requisitos: Windows x64 o ARM64, VS Code con su chat integrado habilitado, una
+cuenta de ChatGPT con acceso a Astra y, para las herramientas de imágenes,
+[Node.js 22 LTS o posterior](https://nodejs.org/en/download). El binario del proxy
+funciona sin Node.js. No necesitas Rust, Cargo ni compilar el proyecto.
+
+1. Descarga `vscode-setup.zip` y extráelo. Sus scripts también están en `scripts/`
+   en este repositorio. Abre PowerShell en la carpeta extraída.
+2. Instala el **binario de la release** con comprobación SHA-256:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\install.ps1
+   ```
+
+3. Inicia sesión en la nueva PC. Cada PC guarda su propia sesión; no copies
+   credenciales ni tokens del equipo anterior:
+
+   ```powershell
+   $env:CCP_CONFIG_DIR = "$env:USERPROFILE\.config\claude-code-proxy"
+   & "$env:LOCALAPPDATA\Programs\claude-code-proxy\claude-code-proxy.exe" codex auth login
+   ```
+
+4. Añade Astra y la herramienta de imágenes al chat de VS Code:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\configure-vscode.ps1
+   ```
+
+   El script combina las entradas con las existentes y guarda copias `.bak` junto
+   a los archivos modificados. Si solo quieres texto, usa `-SkipImages`. Los
+   archivos JSON existentes deben ser JSON válido; si contienen comentarios,
+   combina manualmente los ejemplos siguientes. El parámetro `ExecutionPolicy`
+   se aplica únicamente a ese proceso de PowerShell.
+
+5. Inicia el proxy y mantén abierta esa terminal:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File .\start-proxy.ps1
+   ```
+
+6. En VS Code abre un chat nuevo, despliega el selector de modelos y selecciona
+   **GPT-6 Astra (Codex subscription)**, en **Codex via Proxy**. Si no aparece,
+   ejecuta **Developer: Reload Window** desde la paleta de comandos.
+7. Ejecuta **MCP: List Servers**, selecciona **codex-images** e inícialo. Revisa
+   y acepta la confianza de ese servidor cuando VS Code la solicite. En modo
+   Agent, habilita `codex_generate_image` y `codex_edit_image` entre las herramientas.
+   Prueba: “Usa codex_generate_image para crear un robot azul sobre fondo blanco”.
+
+Los scripts aceptan `-InstallDir` para instalar en otro directorio. Para perfiles
+distintos de VS Code, `configure-vscode.ps1` acepta `-VSCodeUserDir`. Para otra
+carpeta de credenciales/configuración, usa el mismo `-ProxyConfigDir` en la
+configuración y el inicio, y `CCP_CONFIG_DIR` al autenticar.
+
+## Configuración manual del chat integrado
+
+Abre **Chat: Manage Language Models**, o el archivo de usuario
+`%APPDATA%\Code\User\chatLanguageModels.json`, y añade esta entrada al array:
+
+```json
+{
+  "name": "Codex via Proxy",
+  "vendor": "customendpoint",
+  "apiKey": "unused",
+  "apiType": "messages",
+  "models": [{
+    "id": "gpt-6-astra",
+    "name": "GPT-6 Astra (Codex subscription)",
+    "url": "http://127.0.0.1:18765/v1/messages",
+    "toolCalling": true,
+    "vision": true,
+    "maxInputTokens": 240000,
+    "maxOutputTokens": 32000,
+    "thinking": true,
+    "supportsReasoningEffort": ["low", "medium", "high", "xhigh", "max"],
+    "reasoningEffortFormat": "messages"
+  }]
+}
+```
+
+Los límites son conservadores y no afirman que tu cuenta permita un millón de
+tokens. `unused` solo satisface el campo de la conexión local; la autenticación
+real se realiza con `codex auth login`.
+
+Para imágenes, combina `"imagesApi": true` dentro del objeto `codex` en
+`%USERPROFILE%\.config\claude-code-proxy\config.json`. El script de inicio
+establece explícitamente esta ubicación con `CCP_CONFIG_DIR`.
+Añade a `servers` en **MCP: Open User Configuration**:
+
+```json
+"codex-images": {
+  "type": "stdio",
+  "command": "node",
+  "args": ["C:/RUTA/claude-code-proxy/codex-images-mcp.mjs"],
+  "env": { "CCP_IMAGE_PROXY_URL": "http://127.0.0.1:18765" }
+}
+```
+
+Sustituye la ruta por el archivo instalado. Las imágenes se guardan en
+`%USERPROFILE%\Pictures\Codex`; `CCP_IMAGE_OUTPUT_DIR` permite cambiarla.
+El puente MCP solo llama al proxy local. Las imágenes y los prompts usan la
+sesión de ChatGPT del proxy; el puente no lee ni incluye credenciales.
+Las ediciones reciben rutas absolutas a imágenes elegidas por el usuario y
+guardan una imagen nueva, conservando los originales.
 
 ## Instalar o actualizar
 
@@ -36,7 +141,7 @@ El servidor escucha en `http://127.0.0.1:18765`. Conserva esa terminal abierta.
 También puedes habilitarlo de forma persistente con `codex.imagesApi: true` en
 el `config.json` del proxy, combinándolo con las opciones existentes.
 
-## Configurar Claude Code
+## Opcional: configurar la extensión Claude Code
 
 Combina estas variables con el objeto `env` de `%USERPROFILE%\.claude\settings.json`.
 Conserva los demás ajustes y variables que ya tengas:
@@ -82,7 +187,8 @@ cuenta de ChatGPT.
 1. `--version` muestra `0.1.36-astra.1`.
 2. `models` incluye `gpt-6-astra` y `gpt-6-astra-fast`.
 3. El chat nuevo de Claude Code obtiene una respuesta y el monitor del proxy
-   registra una solicitud con Astra.
+   registra una solicitud con Astra. En el chat integrado selecciona el modelo
+   en su selector; en la extensión Claude Code configura sus propias variables.
 4. Una solicitud al endpoint de imágenes devuelve una imagen válida.
 
 El registro local del modelo no garantiza que una cuenta concreta tenga acceso.
