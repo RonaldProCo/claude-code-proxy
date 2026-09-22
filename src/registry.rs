@@ -423,8 +423,18 @@ mod tests {
     fn gpt_6_sol_and_luna_route_to_codex() {
         let registry = Registry::new(AliasProvider::Codex);
         for model in ["gpt-6-sol", "gpt-6-luna"] {
-            for requested in [model.to_string(), format!("{model}-fast"), format!("{model}[1m]")] {
-                assert_eq!(registry.provider_for_model(&requested, None).unwrap().name(), "codex");
+            for requested in [
+                model.to_string(),
+                format!("{model}-fast"),
+                format!("{model}[1m]"),
+            ] {
+                assert_eq!(
+                    registry
+                        .provider_for_model(&requested, None)
+                        .unwrap()
+                        .name(),
+                    "codex"
+                );
             }
         }
     }

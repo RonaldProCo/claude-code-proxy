@@ -122,7 +122,12 @@ pub fn assert_allowed_model(model: &str) -> Result<(), ModelNotAllowedError> {
 pub fn uses_responses_lite(model: &str) -> bool {
     matches!(
         model,
-        "gpt-5.6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-6-astra" | "gpt-6-luna" | "gpt-6-sol"
+        "gpt-5.6-luna"
+            | "gpt-5.6-sol"
+            | "gpt-5.6-terra"
+            | "gpt-6-astra"
+            | "gpt-6-luna"
+            | "gpt-6-sol"
     )
 }
 
